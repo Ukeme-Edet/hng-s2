@@ -126,6 +126,49 @@ class AuthTestCase(unittest.TestCase):
         self.assertIn("accessToken", data["data"])
         self.assertEqual(data["data"]["user"]["email"], "john@test.com")
 
+    def test_user_login_and_access_organisation(self):
+        """
+        Test user login and access organisation.
+        """
+        with self.app.app_context():
+            user = User(
+                firstName="John",
+                lastName="Doe",
+                email="john1@test.com",
+                phone="1234567890",
+            )
+            user.set_password("password")
+            db.session.add(user)
+            db.session.commit()
+
+            # log in user
+            response = self.client.post(
+                "/auth/login",
+                json={"email": f"{user.email}", "password": "password"},
+            )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data)
+            token = data["data"]["accessToken"]
+            headers = {"Authorization": f"Bearer {token}"}
+
+            # create organisation
+            response = self.client.post(
+                "/api/organisations",
+                json={"name": "John's Org"},
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, 201)
+            data = json.loads(response.data)
+            org_id = data["data"]["orgId"]
+
+            # get organisation
+            response = self.client.get(
+                f"/api/organisations/{org_id}", headers=headers
+            )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data)
+            self.assertEqual(data["data"]["name"], "John's Org")
+
     def test_register_fails_if_required_fields_are_missing(self):
         """
         Test case to verify that registration fails if required fields are missing.
@@ -198,11 +241,14 @@ class AuthTestCase(unittest.TestCase):
             db.session.add_all([user1, user2, org1, org2])
             db.session.commit()
 
-            token = jwt.encode(
-                {"userId": user1.userId, "sub": user1.userId},
-                current_app.config["JWT_SECRET_KEY"],
-                algorithm="HS256",
+            # Log in user1
+            response = self.client.post(
+                "/auth/login",
+                json={"email": "john@test.com", "password": "password"},
             )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data)
+            token = data["data"]["accessToken"]
             headers = {"Authorization": f"Bearer {token}"}
 
             # Check that user1 can access org1 but not org2

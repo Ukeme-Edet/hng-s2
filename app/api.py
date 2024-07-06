@@ -55,6 +55,7 @@ def get_user(id):
 @jwt_required()
 def get_organisations():
     user_id = get_jwt_identity()["userId"]
+    user = User.query.filter_by(userId=user_id).first()
     try:
         return (
             jsonify(
@@ -64,11 +65,7 @@ def get_organisations():
                     "data": {
                         "organisations": [
                             organisation.to_dict()
-                            for organisation in User.query.filter_by(
-                                userId=user_id
-                            )
-                            .first()
-                            .organisations
+                            for organisation in user.organisations
                         ]
                     },
                 }
@@ -85,63 +82,66 @@ def get_organisation(id):
     user_id = get_jwt_identity()["userId"]
     try:
         organisation = Organisation.query.filter_by(org_id=id).first()
-        return (
+        response = (
             jsonify(
                 {
                     "status": "success",
                     "message": "Organisation retrieved successfully",
                     "data": organisation.to_dict(),
-                },
-                200,
+                }
             )
             if organisation
             and organisation
             in User.query.filter_by(userId=user_id).first().organisations
             else (
-                (
-                    jsonify(
-                        {
-                            "status": "Bad Request",
-                            "message": "Authentication failed",
-                            "statusCode": 401,
-                        }
-                    ),
-                    401,
+                jsonify(
+                    {
+                        "status": "Bad Request",
+                        "message": "Authentication failed",
+                        "statusCode": 401,
+                    }
                 )
                 if organisation
-                else (
-                    jsonify(
-                        {
-                            "status": "failure",
-                            "message": "Organisation not found",
-                        }
-                    ),
-                    404,
+                else jsonify(
+                    {
+                        "status": "failure",
+                        "message": "Organisation not found",
+                        "statusCode": 404,
+                    }
                 )
             )
         )
+        if response.json["status"] == "failure":
+            response.status_code = 404
+        if response.json["status"] == "Bad Request":
+            response.status_code = 401
+        return response
     except Exception as e:
         return jsonify(server_error), 500
 
 
 @api.route("/organisations", methods=["POST"], endpoint="create_organisation")
-@jwt_required
+@jwt_required()
 def create_organisation():
     try:
         data = request.get_json()
         organisation = Organisation(
             name=data["name"], description=data.get("description", "")
         )
-        user = User.query.get(get_jwt_identity()["userId"])
+        user = User.query.filter_by(
+            userId=get_jwt_identity()["userId"]
+        ).first()
         user.organisations.append(organisation)
         db.session.add(organisation)
         db.session.commit()
-        return jsonify(
-            {
-                "status": "success",
-                "message": "Organisation created successfully",
-                "data": organisation.to_dict(),
-            },
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Organisation created successfully",
+                    "data": organisation.to_dict(),
+                }
+            ),
             201,
         )
     except Exception as e:
