@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve the app-service
+After=network.target
+
+[Service]
+User=tech-wiz
+Group=www-data
+WorkingDirectory=/home/tech-wiz/hng-s2
+Environment="PATH=/home/tech-wiz/hng-s2/venv/bin"
+ExecStart=/home/tech-wiz/hng-s2/venv/bin/gunicorn --workers 5 --bind unix:app-service.sock -m 007 run:app
+
+[Install]
+WantedBy=multi-user.target
