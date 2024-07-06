@@ -8,7 +8,7 @@ python3 -m venv venv
 
 load_env() {
 	if [ -f .env ]; then
-		export $(grep -v '^#' .env | xargs)
+		export $(cat .env | xargs)
 	else
 		echo ".env file not found!"
 		exit 1
@@ -21,21 +21,18 @@ load_env
 sudo apt-get install -y postgresql postgresql-contrib
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
-sudo -i -u postgres
-psql
-CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD'
-CREATE DATABASE $DB_NAME
-GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER
-GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER
-GRANT CREATE ON DATABASE $DB_NAME TO $DB_USER
-\c $DB_NAME
-GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER
-GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO $DB_USER
-\q
-exit
+sudo -i -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD'"
+sudo -i -u postgres psql -c "CREATE DATABASE $DB_NAME"
+sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER"
+sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER"
+sudo -i -u postgres psql -c "GRANT CREATE ON DATABASE $DB_NAME TO $DB_USER"
+sudo -i -u postgres psql -c "\c $DB_NAME"
+sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER"
+sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER"
+sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER"
+sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER"
+sudo -i -u postgres psql -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO $DB_USER"
+sudo -i -u postgres psql -c "\q"
 sudo apt install -y libpq-dev
 
 # Activate the virtual environment
