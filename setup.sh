@@ -6,17 +6,36 @@ sudo apt-get update -y
 sudo apt-get install -y python3-pip python3-venv python3-dev nginx
 python3 -m venv venv
 
+load_env() {
+	if [ -f .env ]; then
+		export $(grep -v '^#' .env | xargs)
+	else
+		echo ".env file not found!"
+		exit 1
+	fi
+}
+
+load_env
+
 # Set up the postgres database
 sudo apt-get install -y postgresql postgresql-contrib
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
-sudo -u postgres psql -c "CREATE USER hng2 WITH PASSWORD 'hng2_pwd';"
-sudo -u postgres psql -c "CREATE DATABASE hng_db;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE hng_db TO hng2;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO hng2;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO hng2;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON SCHEMA public TO hng2;"
-sudo -u postgres psql -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO hng2;"
+sudo -i -u postgres
+psql
+CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD'
+CREATE DATABASE $DB_NAME
+GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER
+GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER
+GRANT CREATE ON DATABASE $DB_NAME TO $DB_USER
+\c $DB_NAME
+GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER
+GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO $DB_USER
+\q
+exit
 sudo apt install -y libpq-dev
 
 # Activate the virtual environment
