@@ -20,7 +20,7 @@ server_error = {
 @jwt_required()
 def get_user(id):
     try:
-        current_user = User.query.get(get_jwt_identity().userId)
+        current_user = User.query.get(get_jwt_identity()["userId"])
         user = User.query.filter_by(userId=id).first()
         if current_user.userId != id and all(
             not org in user.organisations for org in current_user.organisations
@@ -54,7 +54,7 @@ def get_user(id):
 @api.route("/organisations", methods=["GET"], endpoint="get_organisations")
 @jwt_required
 def get_organisations():
-    user_id = get_jwt_identity().userId
+    user_id = get_jwt_identity()["userId"]
     try:
         return jsonify(
             {
@@ -80,7 +80,7 @@ def get_organisations():
 @api.route("/organisations/<id>", methods=["GET"], endpoint="get_organisation")
 @jwt_required()
 def get_organisation(id):
-    user_id = get_jwt_identity().userId
+    user_id = get_jwt_identity()["userId"]
     try:
         organisation = Organisation.query.filter_by(org_id=id).first()
         return (
@@ -130,7 +130,7 @@ def create_organisation():
         organisation = Organisation(
             name=data["name"], description=data.get("description", "")
         )
-        user = User.query.get(get_jwt_identity().userId)
+        user = User.query.get(get_jwt_identity()["userId"])
         user.organisations.append(organisation)
         db.session.add(organisation)
         db.session.commit()
