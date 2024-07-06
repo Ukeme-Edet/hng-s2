@@ -52,25 +52,27 @@ def get_user(id):
 
 
 @api.route("/organisations", methods=["GET"], endpoint="get_organisations")
-@jwt_required
+@jwt_required()
 def get_organisations():
     user_id = get_jwt_identity()["userId"]
     try:
-        return jsonify(
-            {
-                "status": "success",
-                "message": "Organisations retrieved successfully",
-                "data": {
-                    "organisations": [
-                        organisation.to_dict()
-                        for organisation in User.query.filter_by(
-                            userId=user_id
-                        )
-                        .first()
-                        .organisations
-                    ]
-                },
-            },
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Organisations retrieved successfully",
+                    "data": {
+                        "organisations": [
+                            organisation.to_dict()
+                            for organisation in User.query.filter_by(
+                                userId=user_id
+                            )
+                            .first()
+                            .organisations
+                        ]
+                    },
+                }
+            ),
             200,
         )
     except Exception as e:
