@@ -8,9 +8,7 @@ python3 -m venv venv
 
 load_env() {
 	if [ -f .env ]; then
-		set -a
-		source .env
-		set +a
+		export $(cat .env | xargs)
 	else
 		echo ".env file not found!"
 		exit 1
