@@ -40,8 +40,8 @@ def get_user(id):
                     "status": "Bad Request",
                     "message": "Authentication failed",
                     "statusCode": 401,
-                    "cuo": current_user.organisations,
-                    "uo": user.organisations
+                    "cuo": [org.org_id for org in current_user.organisations],
+                    "uo": [org.org_id for org in user.organisations],
                 }
             ),
             401,
