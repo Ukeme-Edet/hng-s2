@@ -24,24 +24,19 @@ def get_user(id):
             userId=get_jwt_identity()["userId"]
         ).first()
         user = User.query.filter_by(userId=id).first()
-        if user.userId != current_user.userId:
-            for org in user.organisations:
-                for org2 in current_user.organisations:
-                    if org.org_id == org2.org_id:
-                        break
-            else:
-                return (
-                    jsonify(
-                        {
-                            {
-                                "status": "Bad Request",
-                                "message": "Authentication failed",
-                                "statusCode": 401,
-                            }
-                        }
-                    ),
-                    401,
-                )
+        if current_user.userId != id and all(
+            not org in user.organisations for org in current_user.organisations
+        ):
+            return (
+                jsonify(
+                    {
+                        "status": "Bad Request",
+                        "message": "Authentication failed",
+                        "statusCode": 401,
+                    }
+                ),
+                401,
+            )
         return (
             jsonify(
                 {
