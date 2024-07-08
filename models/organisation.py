@@ -4,8 +4,15 @@ This file defines the Organisation model.
 """
 
 import uuid
-from sqlalchemy import Column, String
+from sqlalchemy import Column, ForeignKey, String, Table
 from app import db
+
+organisation_user_table = Table(
+    "organisation_user",
+    db.Model.metadata,
+    Column("org_id", String(50), ForeignKey("organisations.org_id")),
+    Column("user_id", String(50), ForeignKey("users.userId")),
+)
 
 
 class Organisation(db.Model):
@@ -22,9 +29,11 @@ class Organisation(db.Model):
         nullable=False,
         unique=True,
     )
-    # define foreign key
-    owner_id = Column(
-        String(50), db.ForeignKey("users.userId"), nullable=False
+    # create a many to many relationship with the User model
+    users = db.relationship(
+        "User",
+        back_populates="organisations",
+        secondary=organisation_user_table,
     )
     name = Column(String(50), nullable=False)
     description = Column(String(50))

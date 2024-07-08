@@ -7,6 +7,7 @@ import uuid
 from flask import Flask
 from sqlalchemy import Column, String
 from werkzeug.security import generate_password_hash, check_password_hash
+from models.organisation import organisation_user_table
 from app import db
 
 
@@ -29,8 +30,11 @@ class User(db.Model):
     email = Column(String(50), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=False)
     phone = Column(String(50))
+    # create a one to many relationship with the Organisation model
     organisations = db.relationship(
-        "Organisation", backref="user", lazy=True, cascade="all, delete-orphan"
+        "Organisation",
+        back_populates="users",
+        secondary=organisation_user_table,
     )
 
     def __init__(self, firstName, lastName, email, password="", phone=""):
