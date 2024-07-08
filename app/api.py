@@ -26,8 +26,8 @@ def get_user(id):
         user = User.query.filter_by(userId=id).first()
         if user.userId != current_user.userId:
             for org in user.organisations:
-                for org in current_user.organisations:
-                    if org.org_id == org.org_id:
+                for org2 in current_user.organisations:
+                    if org.org_id == org2.org_id:
                         break
             else:
                 return (
