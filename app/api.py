@@ -25,7 +25,10 @@ def get_user(id):
         ).first()
         user = User.query.filter_by(userId=id).first()
         if current_user.userId != id and all(
-            not org in user.organisations for org in current_user.organisations
+            [
+                org not in user.organisations
+                for org in current_user.organisations
+            ]
         ):
             return (
                 jsonify(
