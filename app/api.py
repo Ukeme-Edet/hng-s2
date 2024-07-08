@@ -20,10 +20,16 @@ server_error = {
 @jwt_required()
 def get_user(id):
     try:
-        current_user = User.query.get(get_jwt_identity()["userId"])
+        current_user = User.query.filter_by(
+            userId=get_jwt_identity()["userId"]
+        ).first()
         user = User.query.filter_by(userId=id).first()
-        if current_user.userId != id and all(
-            not org in user.organisations for org in current_user.organisations
+        if user.userId != current_user.userId and not any(
+            [
+                organisation
+                for organisation in current_user.organisations
+                if user in organisation.users
+            ]
         ):
             return (
                 jsonify(

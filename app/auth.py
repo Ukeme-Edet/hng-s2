@@ -76,7 +76,6 @@ def register():
             201,
         )
     except Exception as e:
-        print(e)
         return (
             jsonify(
                 {
